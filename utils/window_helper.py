@@ -1,7 +1,12 @@
-import win32gui
-import win32process
 import os
 from config import Config
+
+try:
+    import win32gui
+    import win32process
+except ImportError:
+    win32gui = None
+    win32process = None
 
 class WindowHelper:
     def __init__(self):
@@ -11,6 +16,10 @@ class WindowHelper:
         self.my_pid = os.getpid()
 
     def update(self, current_time_ms):
+        if win32gui is None or win32process is None:
+            self.window_rects = []
+            return
+
         if current_time_ms - self.last_scan_time > self.scan_interval:
             self.last_scan_time = current_time_ms
             self._scan_windows()

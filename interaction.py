@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QMenu, QAction
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt
 from config import Config
 
 class InteractionSystem:
@@ -17,13 +17,13 @@ class InteractionSystem:
 
     def _is_on_character(self, pos):
         # Character bounding box
-        from physics import PhysicsEngine
+        global_pos = self.app.mapToGlobal(pos)
         cx, cy = self.app.physics.x, self.app.physics.y
         w, h = Config.RENDER_SIZE, Config.RENDER_SIZE
-        return cx <= pos.x() <= cx + w and cy <= pos.y() <= cy + h
+        return cx <= global_pos.x() <= cx + w and cy <= global_pos.y() <= cy + h
 
     def show_context_menu(self, pos):
-        menu = QMenu()
+        menu = QMenu(self.app)
         
         # Mode options
         idle_act = QAction("IDLE", menu)

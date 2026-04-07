@@ -12,7 +12,7 @@ class BehaviorEngine:
         self.target_x = physics.x
 
     def update(self, dt):
-        self.state_timer += 16.67  # Approx 60fps ms per frame
+        self.state_timer += dt * 1000.0
         
         # Dispatch to state logic
         if self.current_state == "IDLE":
@@ -95,7 +95,7 @@ class BehaviorEngine:
             self._change_state("JUMP")
 
     def _update_swing(self):
-        if self.state_timer < 50:
+        if self.state_timer <= (Config.TARGET_DT * 1000.0) + 1:
             self.physics.start_swing()
         if self.state_timer > 4000:
             self._change_state("JUMP")

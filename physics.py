@@ -24,37 +24,39 @@ class PhysicsEngine:
         self.swing_angular_vel = 0
 
     def update(self, dt, current_state):
+        frame_scale = dt / Config.TARGET_DT if Config.TARGET_DT else 1.0
+
         # Update window data
         self.window_helper.update(int((time.time() - self.start_time) * 1000))
         
         if current_state == "SWING":
-            self._update_swing(dt)
+            self._update_swing(frame_scale)
         else:
-            self._update_linear(dt, current_state)
+            self._update_linear(frame_scale, current_state)
             
         self._check_collisions()
 
-    def _update_linear(self, dt, state):
+    def _update_linear(self, frame_scale, state):
         # Apply Gravity
         if not self.is_grounded and state not in ["CRAWL", "SWING"]:
-            self.vy += Config.GRAVITY
+            self.vy += Config.GRAVITY * frame_scale
             if self.vy > Config.TERMINAL_VELOCITY:
                 self.vy = Config.TERMINAL_VELOCITY
 
         # Update Position
-        self.x += self.vx
-        self.y += self.vy
+        self.x += self.vx * frame_scale
+        self.y += self.vy * frame_scale
 
-    def _update_swing(self, dt):
+    def _update_swing(self, frame_scale):
         if self.swing_length <= 0:
             self.swing_length = 1.0  # Avoid zero division
             
         # Pendulum Physics: theta'' = -(g/L) * sin(theta)
         g = 0.5  # Local gravity scaling
         accel = -(g / self.swing_length) * math.sin(self.swing_angle)
-        self.swing_angular_vel += accel
-        self.swing_angular_vel *= 0.99  # Damping
-        self.swing_angle += self.swing_angular_vel
+        self.swing_angular_vel += accel * frame_scale
+        self.swing_angular_vel *= 0.99 ** frame_scale  # Damping
+        self.swing_angle += self.swing_angular_vel * frame_scale
 
         # Cartesion from Polar
         self.x = self.swing_anchor[0] + self.swing_length * math.sin(self.swing_angle) - Config.RENDER_SIZE // 2

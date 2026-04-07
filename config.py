@@ -6,10 +6,14 @@ class Config:
     _app = None
     SCREEN_WIDTH = 1920
     SCREEN_HEIGHT = 1080
+    OVERLAY_MARGIN = 32
+    TARGET_DT = 1.0 / 60.0
     
     @classmethod
-    def initialize(cls):
-        if not cls._app:
+    def initialize(cls, app=None):
+        if app is not None:
+            cls._app = app
+        elif not cls._app:
             cls._app = QApplication.instance() or QApplication(sys.argv)
         screen = cls._app.primaryScreen().geometry()
         cls.SCREEN_WIDTH = screen.width()

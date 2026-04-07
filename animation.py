@@ -9,18 +9,19 @@ class AnimationManager:
         self.current_frame = 0
         self.state_frames = {}
         self.facing_right = True
-        self.timer = 0
+        self.timer = 0.0
         
         # Load all sprites at startup
         Assets.generate_all()
         for state in ["IDLE", "WALK", "RUN", "JUMP", "CRAWL", "SWING"]:
             self.state_frames[state] = Assets.get_sprites(state)
+        self.state_frames["INTERACT"] = self.state_frames.get("IDLE", [])
 
     def set_state(self, state):
         if self.current_state != state:
             self.current_state = state
             self.current_frame = 0
-            self.timer = 0
+            self.timer = 0.0
 
     def update(self, dt, vx):
         # Update facing direction
@@ -28,12 +29,12 @@ class AnimationManager:
             self.facing_right = vx > 0
 
         # Advance frames
-        self.timer += 1
-        if self.timer >= (60 / Config.ANIMATION_FPS):
-            self.timer = 0
-            frames = self.state_frames.get(self.current_state, [])
-            if frames:
-                self.current_frame = (self.current_frame + 1) % len(frames)
+        self.timer += dt
+        frame_time = 1.0 / max(1, Config.ANIMATION_FPS)
+        frames = self.state_frames.get(self.current_state, [])
+        while frames and self.timer >= frame_time:
+            self.timer -= frame_time
+            self.current_frame = (self.current_frame + 1) % len(frames)
 
     def get_current_sprite(self):
         frames = self.state_frames.get(self.current_state, [])

@@ -20,6 +20,7 @@ class GameLoop:
         self.behavior.update(dt)
         self.physics.update(dt, self.behavior.current_state)
         self.animation.update(dt, self.physics.vx)
+        self.app.sync_to_scene()
         
         # Trigger Repaint
         self.app.update()

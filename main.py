@@ -5,19 +5,14 @@ from game_loop import GameLoop
 from config import Config
 
 def main():
-    # Initialize Config
-    Config.initialize()
-    
-    # Initialize App
     app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(True)
+    Config.initialize(app)
     
-    # Initialize Main System
     spidey_app = SpideyApp()
-    
-    # Initialize Game Loop
     game_loop = GameLoop(spidey_app)
+    spidey_app.game_loop = game_loop
     
-    # Run
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
