@@ -74,7 +74,11 @@ class WindowHelper:
 
     def get_ground_y(self, x, current_y, render_size):
         """Finds the highest ground (floor or window top) below the character."""
-        floor_y = Config.SCREEN_HEIGHT - render_size
+        screen_rect = Config.get_screen_available_rect(
+            x + (render_size / 2),
+            current_y + (render_size / 2),
+        )
+        floor_y = screen_rect.bottom() - render_size
         best_y = floor_y
         
         char_center_x = x + render_size // 2

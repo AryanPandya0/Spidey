@@ -34,11 +34,12 @@ class Renderer:
             self._draw_rope(painter, offset_x, offset_y)
             
         # Draw Character
-        sprite = self.animation.get_current_sprite()
+        sprite = self.animation.get_oriented_sprite(self.physics.contact_surface)
         if sprite:
             x = int(self.physics.x - offset_x)
             y = int(self.physics.y - offset_y)
-            self._draw_shadow(painter, x, y)
+            if self.physics.contact_surface == "floor":
+                self._draw_shadow(painter, x, y)
             painter.drawPixmap(x, y, sprite)
             
         # Draw Debug hitboxes

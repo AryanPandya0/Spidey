@@ -49,6 +49,7 @@ class SpideyApp(QWidget):
         if force or self.scene_rect != rect:
             self.scene_rect = rect
             self.setGeometry(rect)
+        self.raise_()
 
     def closeEvent(self, event):
         if self.game_loop is not None:

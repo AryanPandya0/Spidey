@@ -1,7 +1,7 @@
-from PyQt5.QtGui import QPixmap, QTransform
+from PyQt5.QtGui import QTransform
 from PyQt5.QtCore import Qt
-from assets import Assets
 from config import Config
+from assets import Assets
 
 class AnimationManager:
     def __init__(self):
@@ -15,6 +15,7 @@ class AnimationManager:
         Assets.generate_all()
         for state in ["IDLE", "WALK", "RUN", "JUMP", "CRAWL", "SWING"]:
             self.state_frames[state] = Assets.get_sprites(state)
+        
         self.state_frames["INTERACT"] = self.state_frames.get("IDLE", [])
 
     def set_state(self, state):
@@ -38,10 +39,25 @@ class AnimationManager:
 
     def get_current_sprite(self):
         frames = self.state_frames.get(self.current_state, [])
-        if not frames:
-            return None
+        if not frames: return None
         
         sprite = frames[self.current_frame % len(frames)]
         if not self.facing_right:
-            return sprite.transformed(QTransform().scale(-1, 1))
+            sprite = sprite.transformed(QTransform().scale(-1, 1))
+        return sprite
+
+    def get_oriented_sprite(self, surface):
+        sprite = self.get_current_sprite()
+        if sprite is None: return None
+
+        if self.current_state != "CRAWL":
+            return sprite
+
+        # Handle crawl orientations based on contact surface.
+        if surface == "left_wall":
+            return sprite.transformed(QTransform().rotate(-90), Qt.SmoothTransformation)
+        if surface == "right_wall":
+            return sprite.transformed(QTransform().rotate(90), Qt.SmoothTransformation)
+        if surface == "ceiling":
+            return sprite.transformed(QTransform().rotate(180), Qt.SmoothTransformation)
         return sprite
