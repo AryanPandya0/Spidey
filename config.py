@@ -56,14 +56,14 @@ class Config:
             cls.SCREEN_HEIGHT,
         )
 
-    # Sprite Rendering
-    SPRITE_BASE_SIZE = 128
-    SCALE_FACTOR = 1.5
+    # Sprite Rendering (Custom for Sega Spreadsheet)
+    SPRITE_BASE_SIZE = 64 # Custom size for classic sheet
+    SCALE_FACTOR = 3.0    # Scale up classic pixels
     RENDER_SIZE = int(SPRITE_BASE_SIZE * SCALE_FACTOR)  # 192x192
 
     # Timing
     FPS = 60
-    ANIMATION_FPS = 10
+    ANIMATION_FPS = 12 # Faster animation for classic sprites
     
     # Physics Constants
     GRAVITY = 0.5
@@ -73,21 +73,14 @@ class Config:
     RUN_SPEED = 4.5
     
     # Behavior Constants
-    MIN_IDLE_TIME = 2000  # ms
-    MAX_IDLE_TIME = 8000  # ms
-    ACTION_COOLDOWN = 1000 # ms
+    MIN_IDLE_TIME = 2000
+    MAX_IDLE_TIME = 8000
+    ACTION_COOLDOWN = 1000
     
     # Swing Constants
     ROPE_LENGTH_MIN = 300
     ROPE_LENGTH_MAX = 600
-    GRAVITY_ACCEL = 9.8
     DAMPING = 0.99
-    
-    # Colors
-    COLOR_PRIMARY = "#FF0000"  # Red
-    COLOR_SECONDARY = "#0000FF" # Blue
-    COLOR_ACCENT = "#FFFFFF"    # White
-    COLOR_OUTLINE = "#000000"   # Black
     
     # Debug
     DEBUG_MODE = False

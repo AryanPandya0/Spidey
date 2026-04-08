@@ -16,6 +16,7 @@ class AnimationManager:
         for state in ["IDLE", "WALK", "RUN", "JUMP", "CRAWL", "SWING"]:
             self.state_frames[state] = Assets.get_sprites(state)
         
+        # Mapping INTERACT to the last Idle frames (looking around / waving)
         self.state_frames["INTERACT"] = self.state_frames.get("IDLE", [])
 
     def set_state(self, state):
@@ -31,9 +32,11 @@ class AnimationManager:
 
         # Advance frames
         self.timer += dt
+        # Classic sprites often look better at a specific speed
         frame_time = 1.0 / max(1, Config.ANIMATION_FPS)
         frames = self.state_frames.get(self.current_state, [])
-        while frames and self.timer >= frame_time:
+        
+        if frames and self.timer >= frame_time:
             self.timer -= frame_time
             self.current_frame = (self.current_frame + 1) % len(frames)
 
@@ -53,7 +56,7 @@ class AnimationManager:
         if self.current_state != "CRAWL":
             return sprite
 
-        # Handle crawl orientations based on contact surface.
+        # Rotation logic for wall/ceiling crawling
         if surface == "left_wall":
             return sprite.transformed(QTransform().rotate(-90), Qt.SmoothTransformation)
         if surface == "right_wall":
