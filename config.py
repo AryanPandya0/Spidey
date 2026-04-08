@@ -56,31 +56,36 @@ class Config:
             cls.SCREEN_HEIGHT,
         )
 
-    # Sprite Rendering (Custom for Sega Spreadsheet)
-    SPRITE_BASE_SIZE = 64 # Custom size for classic sheet
-    SCALE_FACTOR = 3.0    # Scale up classic pixels
-    RENDER_SIZE = int(SPRITE_BASE_SIZE * SCALE_FACTOR)  # 192x192
+    # Sprite Rendering (High-Res Separate Assets)
+    SPRITE_BASE_SIZE = 400 # Default max height for new assets
+    SCALE_FACTOR = 0.55    # Scale down high-res sprites to desktop size
+    RENDER_SIZE = int(SPRITE_BASE_SIZE * SCALE_FACTOR)  # ~220px
 
     # Timing
     FPS = 60
-    ANIMATION_FPS = 12 # Faster animation for classic sprites
+    ANIMATION_FPS = 15 # Faster animation for high-res sprites
     
     # Physics Constants
     GRAVITY = 0.5
     TERMINAL_VELOCITY = 15.0
     JUMP_FORCE = -12.0
-    WALK_SPEED = 2.0
-    RUN_SPEED = 4.5
+    WALK_SPEED = 2.5
+    RUN_SPEED = 5.0
     
     # Behavior Constants
     MIN_IDLE_TIME = 2000
     MAX_IDLE_TIME = 8000
     ACTION_COOLDOWN = 1000
-    
-    # Swing Constants
+    WEBSHOOT_MAX_TIME = 2000 # 2 seconds for webshooting
     ROPE_LENGTH_MIN = 300
     ROPE_LENGTH_MAX = 600
     DAMPING = 0.99
+    
+    # Persistence
+    PERSISTENCE_PATH = "spidey_settings.json"
+    
+    # Interaction
+    DRAG_THRESHOLD = 5
     
     # Debug
     DEBUG_MODE = False

@@ -28,9 +28,20 @@ class BehaviorEngine:
             self._update_swing()
         elif self.current_state == "INTERACT":
             self._update_interact()
+        elif self.current_state == "DRAG":
+            self._update_drag()
+        elif self.current_state == "WEBSHOOT":
+            self._update_webshoot()
 
         # Update animation state
-        self.animation.set_state(self.current_state)
+        # When dragging, show the "jump" sprite as it looks like being picked up
+        anim_state = "JUMP" if self.current_state == "DRAG" else self.current_state
+        self.animation.set_state(anim_state)
+
+    def _update_drag(self):
+        # We don't do much here as InteractionSystem handles movement
+        # but we reset the timer to stay in this state
+        self.state_timer = 0
 
     def _change_state(self, new_state):
         if self.current_state == new_state: return
@@ -41,9 +52,15 @@ class BehaviorEngine:
     def _update_idle(self):
         self.physics.vx = 0
         if self.state_timer >= self.next_state_time:
-            choices = ["WALK", "RUN", "JUMP", "SWING"]
-            weights = [0.4, 0.2, 0.3, 0.1]
+            choices = ["WALK", "RUN", "JUMP", "SWING", "WEBSHOOT"]
+            weights = [0.35, 0.15, 0.25, 0.1, 0.15]
             self._change_state(random.choices(choices, weights=weights)[0])
+
+    def _update_webshoot(self):
+        self.physics.vx = 0
+        self.physics.vy = 0
+        if self.state_timer >= Config.WEBSHOOT_MAX_TIME:
+            self._change_state("IDLE")
             
     def _update_move(self, speed):
         # Ledge Detection

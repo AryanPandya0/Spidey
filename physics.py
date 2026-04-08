@@ -36,6 +36,13 @@ class PhysicsEngine:
         # Update window data
         self.window_helper.update(int((time.time() - self.start_time) * 1000))
         
+        if current_state == "DRAG":
+            # Dragging is handled by window movement, just keep velocities zero
+            self.vx = 0
+            self.vy = 0
+            self.is_grounded = False
+            return
+
         if current_state == "SWING":
             self._update_swing(frame_scale)
         else:
@@ -45,7 +52,7 @@ class PhysicsEngine:
 
     def _update_linear(self, frame_scale, state):
         # Apply Gravity
-        if not self.is_grounded and state not in ["CRAWL", "SWING"]:
+        if not self.is_grounded and state not in ["CRAWL", "SWING", "DRAG"]:
             self.vy += Config.GRAVITY * frame_scale
             if self.vy > Config.TERMINAL_VELOCITY:
                 self.vy = Config.TERMINAL_VELOCITY

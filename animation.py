@@ -13,11 +13,12 @@ class AnimationManager:
         
         # Load all sprites at startup
         Assets.generate_all()
-        for state in ["IDLE", "WALK", "RUN", "JUMP", "CRAWL", "SWING"]:
+        for state in ["IDLE", "WALK", "RUN", "JUMP", "SWING", "WEBSHOOT"]:
             self.state_frames[state] = Assets.get_sprites(state)
         
-        # Mapping INTERACT to the last Idle frames (looking around / waving)
-        self.state_frames["INTERACT"] = self.state_frames.get("IDLE", [])
+        # Aliasing for missing/variant states
+        self.state_frames["INTERACT"] = self.state_frames.get("WEBSHOOT", self.state_frames.get("IDLE", []))
+        self.state_frames["CRAWL"] = self.state_frames.get("WALK", []) # Alias crawl to walk for now
 
     def set_state(self, state):
         if self.current_state != state:

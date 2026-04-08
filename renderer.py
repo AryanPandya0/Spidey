@@ -10,8 +10,16 @@ class Renderer:
     def scene_bounds(self):
         left = int(self.physics.x)
         top = int(self.physics.y)
-        right = left + Config.RENDER_SIZE
-        bottom = top + Config.RENDER_SIZE
+        
+        sprite = self.animation.get_oriented_sprite(self.physics.contact_surface)
+        if sprite:
+            w = sprite.width()
+            h = sprite.height()
+        else:
+            w = h = Config.RENDER_SIZE
+
+        right = left + w
+        bottom = top + h
 
         if self.animation.current_state == "SWING":
             ax, ay = self.physics.swing_anchor
