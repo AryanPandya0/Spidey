@@ -1,24 +1,15 @@
-from PyQt5.QtGui import QTransform
 from PyQt5.QtCore import Qt
 from config import Config
-from assets import Assets
 
 class AnimationManager:
     def __init__(self):
         self.current_state = "IDLE"
         self.current_frame = 0
-        self.state_frames = {}
         self.facing_right = True
         self.timer = 0.0
         
-        # Load all sprites at startup
-        Assets.generate_all()
-        for state in ["IDLE", "WALK", "RUN", "JUMP", "SWING", "WEBSHOOT"]:
-            self.state_frames[state] = Assets.get_sprites(state)
-        
-        # Aliasing for missing/variant states
-        self.state_frames["INTERACT"] = self.state_frames.get("WEBSHOOT", self.state_frames.get("IDLE", []))
-        self.state_frames["CRAWL"] = self.state_frames.get("WALK", []) # Alias crawl to walk for now
+        # We'll use 8 virtual frames for all animations to drive procedural logic
+        self.VIRTUAL_FPS = Config.ANIMATION_FPS
 
     def set_state(self, state):
         if self.current_state != state:
@@ -31,37 +22,11 @@ class AnimationManager:
         if abs(vx) > 0.1:
             self.facing_right = vx > 0
 
-        # Advance frames
+        # Advance frames (8 frame cycle for procedural math)
         self.timer += dt
-        # Classic sprites often look better at a specific speed
-        frame_time = 1.0 / max(1, Config.ANIMATION_FPS)
-        frames = self.state_frames.get(self.current_state, [])
+        frame_time = 1.0 / self.VIRTUAL_FPS
         
-        if frames and self.timer >= frame_time:
+        if self.timer >= frame_time:
             self.timer -= frame_time
-            self.current_frame = (self.current_frame + 1) % len(frames)
+            self.current_frame = (self.current_frame + 1) % 8
 
-    def get_current_sprite(self):
-        frames = self.state_frames.get(self.current_state, [])
-        if not frames: return None
-        
-        sprite = frames[self.current_frame % len(frames)]
-        if not self.facing_right:
-            sprite = sprite.transformed(QTransform().scale(-1, 1))
-        return sprite
-
-    def get_oriented_sprite(self, surface):
-        sprite = self.get_current_sprite()
-        if sprite is None: return None
-
-        if self.current_state != "CRAWL":
-            return sprite
-
-        # Rotation logic for wall/ceiling crawling
-        if surface == "left_wall":
-            return sprite.transformed(QTransform().rotate(-90), Qt.SmoothTransformation)
-        if surface == "right_wall":
-            return sprite.transformed(QTransform().rotate(90), Qt.SmoothTransformation)
-        if surface == "ceiling":
-            return sprite.transformed(QTransform().rotate(180), Qt.SmoothTransformation)
-        return sprite
