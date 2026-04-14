@@ -1,20 +1,29 @@
 from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QPainterPath
-from PyQt5.QtCore import Qt, QRect
+from PyQt5.QtCore import Qt, QRect, QPoint
 import math
 
 class SpidermanDesign:
     def __init__(self, render_size):
         self.render_size = render_size
-        self.color_red = QColor("#E30022")
-        self.color_blue = QColor("#001A9E")
-        self.color_black = QColor("#000000")
-        self.color_white = QColor("#FFFFFF")
+        
+        # Premium Spidey Palette
+        self.red = QColor("#D30000")
+        self.red_light = QColor("#FF3131")
+        self.red_dark = QColor("#8B0000")
+        
+        self.blue = QColor("#002366")
+        self.blue_light = QColor("#003399")
+        self.blue_dark = QColor("#000033")
+        
+        self.white = QColor("#FFFFFF")
+        self.gray = QColor("#D3D3D3")
+        self.black = QColor("#000000")
+        self.web_color = QColor(0, 0, 0, 60) # Semi-transparent for webbing
 
     def draw(self, painter, x, y, animation):
         painter.save()
-        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.Antialiasing, False) # Keep it crisp for pixel-style
         
-        # Center within the render block
         cx = x + self.render_size // 2
         cy = y + self.render_size // 2
         
@@ -25,102 +34,148 @@ class SpidermanDesign:
         state = animation.current_state
         frame = animation.current_frame
         
-        # Procedural Animation Math
-        bounce = math.sin(frame * 0.5) * 5 if state == "IDLE" else 0
-        leg_angle = math.sin(frame * 0.8) * 30 if state in ["WALK", "RUN"] else 0
-        if state == "RUN": leg_angle *= 1.5
+        # Motion Constants
+        bounce = int(math.sin(frame * 0.5) * 4) if state == "IDLE" else 0
+        leg_osc = math.sin(frame * 0.8)
+        arm_osc = math.sin(frame * 0.8 + 3.14)
         
-        # Draw Sequence (Back to Front)
-        self._draw_limb(painter, int(cx), int(cy + 20 + bounce), 15 + leg_angle, "leg")
-        self._draw_limb(painter, int(cx), int(cy - 10 + bounce), -45, "arm")
-
-        # Torso
-        torso_rect = QRect(int(cx - 20), int(cy - 15 + bounce), 40, 50)
-        painter.setPen(QPen(self.color_black, 2))
-        painter.setBrush(self.color_blue)
-        painter.drawRoundedRect(torso_rect, 15, 15)
+        # Scaling for "Pixel" look
+        P = 4 # Pixel Size
         
-        # Red Vest Detail
-        painter.setBrush(self.color_red)
-        painter.drawChord(torso_rect, 0, 180 * 16)
+        # 1. Back Limb (Z-Order)
+        la = 15 + leg_osc * 30 if state in ["WALK", "RUN"] else 0
+        self._draw_leg(painter, cx, cy + 5 * P + bounce, la, P, back=True)
         
-        # Spider Icon
-        painter.setPen(QPen(self.color_black, 1))
-        painter.setBrush(self.color_black)
-        painter.drawEllipse(int(cx - 4), int(cy + bounce), 8, 10)
+        # 2. Torso & Arms Base
+        self._draw_torso(painter, cx, cy + bounce, P)
         
-        # Front Leg
-        self._draw_limb(painter, int(cx), int(cy + 20 + bounce), -15 - leg_angle, "leg")
+        # 3. Front Leg
+        la_f = -15 - leg_osc * 30 if state in ["WALK", "RUN"] else 0
+        self._draw_leg(painter, cx, cy + 5 * P + bounce, la_f, P, back=False)
         
-        # Dynamic Arm Posing
-        arm_angle = 45
+        # 4. Head (On Top)
+        self._draw_head(painter, cx, cy - 8 * P + bounce, P)
+        
+        # 5. Front Arm
+        aa = 45
         if state == "WEBSHOOT":
-            arm_angle = -80
-            self._draw_web_effect(painter, int(cx + 20), int(cy - 5 + bounce))
+            aa = -100
+            self._draw_web_effect(painter, int(cx + 6 * P), int(cy - 2 * P + bounce), P)
         elif state == "SWING":
-            arm_angle = -150
+            aa = -160
         elif state in ["WALK", "RUN"]:
-            arm_angle = math.sin(frame * 0.8 + 3.14) * 40
-            
-        self._draw_limb(painter, int(cx), int(cy - 10 + bounce), arm_angle, "arm")
-
-        # Head
-        head_y = int(cy - 40 + bounce)
-        painter.setBrush(self.color_red)
-        painter.setPen(QPen(self.color_black, 2))
-        painter.drawEllipse(int(cx - 22), head_y, 44, 48)
-        self._draw_eyes(painter, int(cx), head_y + 20)
+            aa = arm_osc * 45
+        self._draw_arm(painter, cx, cy - 2 * P + bounce, aa, P)
         
         painter.restore()
 
-    def _draw_limb(self, painter, x, y, angle, l_type):
+    def _draw_pixel_rect(self, painter, x, y, w, h, color, light_edge=False):
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(color)
+        painter.drawRect(int(x), int(y), int(w), int(h))
+        
+        if light_edge:
+            painter.setBrush(QColor(255, 255, 255, 40))
+            painter.drawRect(int(x), int(y), int(w), 2) # Top highlight
+
+    def _draw_head(self, painter, cx, cy, P):
+        painter.save()
+        # Head Shape (Red)
+        self._draw_pixel_rect(painter, cx - 4 * P, cy - 2 * P, 8 * P, 10 * P, self.red)
+        # Rim Shading
+        self._draw_pixel_rect(painter, cx + 3 * P, cy - 2 * P, 1 * P, 10 * P, self.red_dark)
+        
+        # Eyes (White with Black Border)
+        # The iconic Sharp tilted Spidey eyes
+        painter.setPen(QPen(self.black, 2))
+        painter.setBrush(self.white)
+        
+        eye_path = QPainterPath()
+        # Right Eye
+        eye_path.moveTo(cx + 1 * P, cy + 1 * P)
+        eye_path.lineTo(cx + 4.5 * P, cy - 1 * P)
+        eye_path.lineTo(cx + 4 * P, cy + 4 * P)
+        eye_path.closeSubpath()
+        # Left Eye
+        eye_path.moveTo(cx - 1 * P, cy + 1 * P)
+        eye_path.lineTo(cx - 4.5 * P, cy - 1 * P)
+        eye_path.lineTo(cx - 4 * P, cy + 4 * P)
+        eye_path.closeSubpath()
+        
+        painter.drawPath(eye_path)
+        
+        # Subtle Webbing lines on head
+        painter.setPen(QPen(self.web_color, 1))
+        painter.drawLine(cx, cy - 2 * P, cx, cy + 8 * P)
+        painter.drawLine(cx - 4 * P, cy + 3 * P, cx + 4 * P, cy + 3 * P)
+        
+        painter.restore()
+
+    def _draw_torso(self, painter, cx, cy, P):
+        # Blue Sides
+        self._draw_pixel_rect(painter, cx - 5 * P, cy - 1 * P, 10 * P, 10 * P, self.blue)
+        # Red Chest Piece (Vest shape)
+        path = QPainterPath()
+        path.moveTo(cx - 5 * P, cy - 1 * P)
+        path.lineTo(cx + 5 * P, cy - 1 * P)
+        path.lineTo(cx + 3 * P, cy + 9 * P)
+        path.lineTo(cx - 3 * P, cy + 9 * P)
+        path.closeSubpath()
+        painter.setBrush(self.red)
+        painter.setPen(QPen(self.black, 1))
+        painter.drawPath(path)
+        
+        # Spider Emblem
+        painter.setBrush(self.black)
+        painter.setPen(Qt.NoPen)
+        painter.drawEllipse(cx - 2, cy + 2 * P, 5, 7) # Body
+        # Legs
+        painter.setPen(QPen(self.black, 1))
+        for i in range(4):
+            y_off = i * 2
+            painter.drawLine(cx - 2, cy + 2 * P + y_off, cx - 6, cy + 1 * P + y_off)
+            painter.drawLine(cx + 2, cy + 2 * P + y_off, cx + 6, cy + 1 * P + y_off)
+
+    def _draw_arm(self, painter, x, y, angle, P):
         painter.save()
         painter.translate(x, y)
         painter.rotate(angle)
-        painter.setPen(QPen(self.color_black, 2))
         
-        if l_type == "arm":
-            painter.setBrush(self.color_red)
-            painter.drawRoundedRect(-6, 0, 12, 35, 5, 5)
-            painter.drawEllipse(-8, 30, 16, 16)
-        else: # leg
-            painter.setBrush(self.color_blue)
-            painter.drawRoundedRect(-8, 0, 16, 40, 6, 6)
-            painter.setBrush(self.color_red)
-            painter.drawRoundedRect(-9, 35, 18, 20, 4, 4)
-            
+        # Shoulder (Red)
+        self._draw_pixel_rect(painter, -2 * P, 0, 4 * P, 3 * P, self.red)
+        # Lower Arm (Red)
+        self._draw_pixel_rect(painter, -2 * P, 3 * P, 4 * P, 5 * P, self.red, light_edge=True)
+        # Hand (Red)
+        self._draw_pixel_rect(painter, -2.5 * P, 8 * P, 5 * P, 3 * P, self.red_dark)
+        
         painter.restore()
 
-    def _draw_eyes(self, painter, cx, y):
+    def _draw_leg(self, painter, x, y, angle, P, back=False):
         painter.save()
-        painter.setPen(QPen(self.color_black, 3))
-        painter.setBrush(self.color_white)
+        painter.translate(x, y)
+        painter.rotate(angle)
         
-        # Right Eye Path
-        path_r = QPainterPath()
-        path_r.moveTo(5, 0)
-        path_r.quadTo(20, -10, 18, 15)
-        path_r.quadTo(5, 12, 5, 0)
+        color = self.blue_dark if back else self.blue
         
-        # Left Eye Path
-        path_l = QPainterPath()
-        path_l.moveTo(-5, 0)
-        path_l.quadTo(-20, -10, -18, 15)
-        path_l.quadTo(-5, 12, -5, 0)
+        # Thigh (Blue)
+        self._draw_pixel_rect(painter, -2.5 * P, 0, 5 * P, 6 * P, color)
+        # Boot (Red)
+        self._draw_pixel_rect(painter, -3 * P, 6 * P, 6 * P, 6 * P, self.red if not back else self.red_dark, light_edge=not back)
+        # Foot
+        self._draw_pixel_rect(painter, -3 * P, 12 * P, 8 * P, 2 * P, self.black if back else self.red_dark)
         
-        painter.translate(cx, y)
-        painter.drawPath(path_r)
-        painter.drawPath(path_l)
         painter.restore()
 
-    def _draw_web_effect(self, painter, x, y):
+    def _draw_web_effect(self, painter, x, y, P):
         painter.save()
-        painter.setPen(QPen(QColor("#FFFFFF"), 2))
-        for i in range(3):
-            angle = (i - 1) * 15
+        painter.setPen(QPen(self.white, 2))
+        for i in range(5):
+            angle = (i - 2) * 12
             painter.save()
             painter.translate(x, y)
             painter.rotate(angle)
-            painter.drawLine(0, 0, 40, 0)
+            painter.drawLine(0, 0, 50, 0)
+            # Add some web "stickiness" bits
+            painter.drawEllipse(20, -2, 4, 4)
             painter.restore()
         painter.restore()
